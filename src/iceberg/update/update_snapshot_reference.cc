@@ -41,7 +41,9 @@ Result<std::shared_ptr<UpdateSnapshotReference>> UpdateSnapshotReference::Make(
 }
 
 UpdateSnapshotReference::UpdateSnapshotReference(std::shared_ptr<Transaction> transaction)
-    : PendingUpdate(std::move(transaction)), updated_refs_(base().refs) {}
+    : PendingUpdate(std::move(transaction)),
+      updated_refs_(base().refs),
+      original_refs_(base().refs) {}
 
 UpdateSnapshotReference::~UpdateSnapshotReference() = default;
 
@@ -220,8 +222,18 @@ UpdateSnapshotReference& UpdateSnapshotReference::SetMaxRefAgeMs(const std::stri
 Result<UpdateSnapshotReference::ApplyResult> UpdateSnapshotReference::Apply() {
   ICEBERG_RETURN_UNEXPECTED(CheckErrors());
 
-  ApplyResult result;
   const auto& current_refs = base().refs;
+  for (const auto& [name, ref] : updated_refs_) {
+    if (!original_refs_.contains(name) && current_refs.contains(name)) {
+      if (ref->type() == SnapshotRefType::kTag) {
+        return CommitFailed("tag '{}' was created concurrently", name);
+      } else {
+        return CommitFailed("branch '{}' was created concurrently", name);
+      }
+    }
+  }
+
+  ApplyResult result;
 
   // Identify references which have been removed
   for (const auto& [name, ref] : current_refs) {

@@ -134,6 +134,8 @@ class ICEBERG_EXPORT UpdateSnapshotReference : public PendingUpdate {
 
   Kind kind() const final { return Kind::kUpdateSnapshotReference; }
 
+  bool IsRetryable() const override { return false; }
+
   struct ApplyResult {
     /// References to set or update (name, ref pairs)
     std::vector<std::pair<std::string, std::shared_ptr<SnapshotRef>>> to_set;
@@ -152,6 +154,7 @@ class ICEBERG_EXPORT UpdateSnapshotReference : public PendingUpdate {
                                                  bool fast_forward);
 
   std::unordered_map<std::string, std::shared_ptr<SnapshotRef>> updated_refs_;
+  std::unordered_map<std::string, std::shared_ptr<SnapshotRef>> original_refs_;
 };
 
 }  // namespace iceberg
