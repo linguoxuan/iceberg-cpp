@@ -221,10 +221,10 @@ Result<UpdateSnapshotReference::ApplyResult> UpdateSnapshotReference::Apply() {
   ICEBERG_RETURN_UNEXPECTED(CheckErrors());
 
   ApplyResult result;
-  const auto& current_refs = base().refs;
 
-  // Identify references which have been removed
-  for (const auto& [name, ref] : current_refs) {
+  const auto& initial_refs = initial_base().refs;
+
+  for (const auto& [name, ref] : initial_refs) {
     if (!updated_refs_.contains(name)) {
       result.to_remove.push_back(name);
     }
@@ -232,8 +232,8 @@ Result<UpdateSnapshotReference::ApplyResult> UpdateSnapshotReference::Apply() {
 
   // Identify references which have been created or updated
   for (const auto& [name, ref] : updated_refs_) {
-    if (auto iter = current_refs.find(name);
-        iter == current_refs.end() || *iter->second != *ref) {
+    if (auto iter = initial_refs.find(name);
+        iter == initial_refs.end() || *iter->second != *ref) {
       result.to_set.emplace_back(name, ref);
     }
   }

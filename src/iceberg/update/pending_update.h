@@ -58,6 +58,9 @@ class ICEBERG_EXPORT PendingUpdate : public ErrorCollector {
   /// \brief Return the kind of this pending update.
   virtual Kind kind() const = 0;
 
+  /// \brief Whether this update can be retried after a commit conflict.
+  virtual bool IsRetryable() const { return true; }
+
   /// \brief Apply the pending changes and commit.
   ///
   /// \return An OK status if the commit was successful, or an error:
@@ -88,7 +91,13 @@ class ICEBERG_EXPORT PendingUpdate : public ErrorCollector {
 
   const TableMetadata& base() const;
 
+  /// \brief Returns the table metadata as it was when this update was created.
+  const TableMetadata& initial_base() const;
+
   std::shared_ptr<TransactionContext> ctx_;
+
+ private:
+  const TableMetadata* initial_base_ = nullptr;
 };
 
 }  // namespace iceberg

@@ -25,7 +25,7 @@
 namespace iceberg {
 
 PendingUpdate::PendingUpdate(std::shared_ptr<TransactionContext> ctx)
-    : ctx_(std::move(ctx)) {}
+    : ctx_(std::move(ctx)), initial_base_(&ctx_->current()) {}
 
 PendingUpdate::~PendingUpdate() = default;
 
@@ -56,5 +56,7 @@ Status PendingUpdate::Finalize([[maybe_unused]] std::optional<Error> commit_erro
 }
 
 const TableMetadata& PendingUpdate::base() const { return ctx_->current(); }
+
+const TableMetadata& PendingUpdate::initial_base() const { return *initial_base_; }
 
 }  // namespace iceberg
